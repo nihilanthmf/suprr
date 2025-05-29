@@ -7,6 +7,7 @@ import {
   fetchProject,
   fetchChatByProjectAndMessageThreadId,
   fetchProjectByChatid,
+  updateLastSeen,
 } from "./database.js";
 import "dotenv/config";
 import WebSocket, { WebSocketServer } from "ws";
@@ -141,6 +142,8 @@ app.post("/webhook", async (req, res) => {
           text,
           false
         );
+
+        await updateLastSeen(project.id);
 
         console.log("broadcasting...");
 

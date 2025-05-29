@@ -59,6 +59,22 @@ export async function fetchChatByProjectAndMessageThreadId(
   }
 }
 
+export async function updateLastSeen(project) {
+  const lastSeen = new Date().toISOString();
+
+  try {
+    const res = await pool.query(
+      "UPDATE projects SET lastseen = $1 WHERE id = $2",
+      [lastSeen, project]
+    );
+
+    return res.rows[0];
+  } catch (error) {
+    console.error("Error fetching project by chatId:", error);
+    return null;
+  }
+}
+
 export async function writeMessages(
   chat,
   chatId,
