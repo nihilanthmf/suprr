@@ -106,6 +106,7 @@ async function setWebhook() {
 }
 
 app.post("/webhook", async (req, res) => {
+  console.log("webhook reached!");
   const request = req.body;
 
   if (
@@ -131,6 +132,7 @@ app.post("/webhook", async (req, res) => {
       );
 
       if (chat) {
+        console.log("chat found!");
         await writeMessages(
           chat,
           chat.id,
@@ -196,8 +198,6 @@ app.post("/message", async (req, res) => {
 
       messageThreadId = createTopicResponse.result.message_thread_id;
     }
-
-    console.log(messageThreadId);
 
     const sendMessageResponse = await axios.post(
       `https://api.telegram.org/bot${botToken}/sendMessage`,

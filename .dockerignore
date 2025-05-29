@@ -1,4 +1,5 @@
-.env
 node_modules
+.env
+.git
 notes.txt
 .DS_Store
