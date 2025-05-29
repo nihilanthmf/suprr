@@ -24,7 +24,6 @@ const wss = new WebSocketServer({
 const port = process.env.PORT || 3000;
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
 app.use(cors());
 app.use(express.json());
 
@@ -62,7 +61,7 @@ wss.on("connection", (ws, req) => {
   clients.add(ws);
 
   ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
+    console.error("WebSocket error");
   });
 
   ws.on("close", () => {
@@ -169,7 +168,7 @@ app.post("/message", async (req, res) => {
 
     const projectData = await fetchProject(project);
 
-    const telegramGroupId = projectData.chatId;
+    const telegramGroupId = projectData.chatid;
 
     if (!botToken || !telegramGroupId) {
       return res
@@ -180,13 +179,11 @@ app.post("/message", async (req, res) => {
     // fetch the chat from db and get the messagethreadid
     const chat = await fetchChat(user);
 
-    console.log(chat);
-
     let messageThreadId = null;
 
     // if the topic doesn't exist, create it
     if (chat) {
-      messageThreadId = chat.messageThreadId;
+      messageThreadId = chat.messagethreadid;
     } else {
       const createTopicResponse = await createTopicInTelegram(
         user,
@@ -227,7 +224,7 @@ app.post("/message", async (req, res) => {
     console.error("Telegram API Error:", error);
     res.status(500).json({
       error: "Failed to send message to Telegram",
-      details: error.message,
+      details: null,
     });
   }
 });
