@@ -97,7 +97,7 @@ async function setWebhook() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      url: "https://suprr-backend.onrender.com/webhook",
+      url: `${process.env.BASE_URL}/webhook`,
       pending_update_count: 0,
       max_connections: 4000,
       allowed_updates: ["message"],
