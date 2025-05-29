@@ -8,6 +8,7 @@ import {
   fetchChatByProjectAndMessageThreadId,
   fetchProjectByChatid,
   updateLastSeen,
+  fetchLastSeen,
 } from "./database.js";
 import "dotenv/config";
 import WebSocket, { WebSocketServer } from "ws";
@@ -91,6 +92,8 @@ function broadcast(message) {
 
 async function setWebhook() {
   const telegramApiUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
+
+  console.log("Setting webhook...");
 
   await fetch(telegramApiUrl, {
     method: "POST",
@@ -242,7 +245,25 @@ app.get("/fetch-chat/:chatId", async (req, res) => {
     res.status(200).json(chat);
   } catch (error) {
     console.error("Error fetching chat:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Failed to fetch chat data" });
+  }
+});
+
+app.get("/fetch-last-seen/:projectId", async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const lastSeenObj = await fetchLastSeen(projectId);
+    console.log(lastSeenObj, projectId);
+
+    if (!lastSeenObj || !lastSeenObj.lastseen) {
+      return res.status(404).json({ error: "Last seen not found" });
+    }
+
+    res.status(200).json(lastSeenObj.lastseen);
+  } catch (error) {
+    console.error("Error fetching last seen:", error);
+    res.status(500).json({ error: "Failed to fetch last seen data" });
   }
 });
 
