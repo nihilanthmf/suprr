@@ -38,10 +38,20 @@ Congrats! The backend is deployed!
 
 1. Create a new row in the "projects" table in your database
 2. Choose a random id, name, user fields, leave chats as an empty array, lastseen and created_at fields should be automatically set to current time. Enter chatid
-3. Get your chatid
+
+## Get your chatid
+1. Create a Telegram account (if you don’t have one) at telegram.org
+2. Create a Telegram group
+3. Go to the group's settings
+4. Turn “Topics” on in the Telegram group
+5. Add your bot to the group
+6. Give your bot full permissions inside the group
+7. Go to @raw_data_bot ("https://t.me/raw_data_bot"), start conversation with it, click on a “Chat” button down below and choose your newly created group
+8. Copy the outputted Chat id and paste it here into the chatid field in the database row that you created on the previous step
 
 ## Self-hosting the frontend
 1. Clone the frontend repo (https://github.com/nihilanthmf/suprr-chat)
 2. Add your server url (BASE_URL) to the "websiteUrl" variable in the app.js file
 3. Add the app.js file to your project directory
-4. Embed the app.js on every page of your website where you want the customer support bubble to show using  <script src="app.js?projectKey=d97eedd1-c52a-442d-aada-2a091d46d93f"></script>
+4. Get a project key from the database row that you have created
+5. Embed the app.js on every page of your website where you want the customer support bubble to show using  <script src="app.js?projectKey=your-project-key"></script>
