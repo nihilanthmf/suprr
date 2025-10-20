@@ -63,7 +63,7 @@ wss.on("connection", (ws, req) => {
   clients.add(ws);
 
   ws.on("error", (error) => {
-    console.error("WebSocket error");
+    console.error("WebSocket error", error);
   });
 
   ws.on("close", () => {
@@ -79,10 +79,7 @@ wss.on("connection", (ws, req) => {
 });
 
 function broadcast(message) {
-  console.log(clients.size);
   clients.forEach((ws) => {
-    console.log(ws.chatId);
-    console.log(message.chatId);
     if (ws.readyState === WebSocket.OPEN && ws.chatId === message.chatId) {
       console.log(JSON.stringify(message));
       ws.send(JSON.stringify(message));

@@ -31,9 +31,13 @@ export async function fetchProject(projectId) {
 
 export async function fetchProjectByChatid(chatId) {
   try {
-    const res = await pool.query("SELECT * FROM projects WHERE chatid = $1", [
-      chatId,
-    ]);
+    const res = await pool.query(
+      `SELECT p.*
+      FROM projects p
+      JOIN chats c ON c.project_id = p.id
+      WHERE c.id = $1;`,
+      [chatId]
+    );
 
     return res.rows[0];
   } catch (error) {
@@ -48,13 +52,13 @@ export async function fetchChatByProjectAndMessageThreadId(
 ) {
   try {
     const res = await pool.query(
-      "SELECT * FROM chats WHERE project = $1 AND messagethreadid = $2",
+      "SELECT * FROM chats WHERE projectid = $1 AND messagethreadid = $2",
       [projectId, messageThreadId]
     );
 
     return res.rows[0];
   } catch (error) {
-    console.error("Error fetching project by chatId:", error);
+    console.error("Error fetching project by project and message_thread_id:", error);
     return null;
   }
 }
@@ -70,7 +74,7 @@ export async function updateLastSeen(project) {
 
     return res.rows[0];
   } catch (error) {
-    console.error("Error fetching project by chatId:", error);
+    console.error("Error updating last seen:", error);
     return null;
   }
 }
@@ -84,7 +88,7 @@ export async function fetchLastSeen(projectId) {
 
     return res.rows[0];
   } catch (error) {
-    console.error("Error fetching project by chatId:", error);
+    console.error("Error fetching last seen:", error);
     return null;
   }
 }
@@ -120,7 +124,7 @@ export async function writeMessages(
 
     return res.rows[0];
   } catch (error) {
-    console.error("Error fetching project by chatId:", error);
+    console.error("Error writing message:", error);
     return null;
   }
 }

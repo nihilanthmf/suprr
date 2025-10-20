@@ -7,10 +7,7 @@ There are two repositories you will need to self host Suprr:
 Here's a step-by-step instruction on how to self-host the backend:
 
 1. Clone this repository (https://github.com/nihilanthmf/suprr)
-2. Create a .env file inside the repo directory with the following values:
-   DATABASE_URL=postgresql://your-pg-database-url
-   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-   BASE_URL=the-url-of-your-backend
+2. Create a .env file inside the repo directory
 
 ## Setting up the database
 
@@ -21,18 +18,18 @@ Here's a step-by-step instruction on how to self-host the backend:
 ## Setting up your telegram bot
 
 1. Create a Telegram Account: If you don't already have one, sign up for a Telegram account. 
-2. Find BotFather: Search for "@BotFather" in your Telegram contacts and start a chat with them. 
-3. Create a New Bot: Type "/newbot" in the chat with BotFather. 
-4. Name and Username: BotFather will prompt you to choose a name and a unique username for your bot. Choose any name and username you want. 
-5. Get the Token: Once you've provided the name and username, BotFather will give you a token. This is a unique key for your bot and is essential for accessing the Telegram API. 
+2. Find BotFather bot: Search for "@BotFather" in your Telegram contacts and start a chat with it.
+3. Create a New Bot: Type "/newbot" in the chat with BotFather.
+4. Name and Username: BotFather will prompt you to choose a name and a unique username for your bot. Choose a name and a username you like.
+5. Get the Token: Once you've provided the name and username, BotFather will give you a token. This is a unique key for your bot and is essential for accessing the Telegram API. The token grants access to your bot so you must not share it with anyone.
 6. Put the Token in the TELEGRAM_BOT_TOKEN in your .env file
 
-## Hosting the service
+## Hosting the server
 
-1. Host the service using (you can either use Commit-to-deploy or Docker, Dockerfile and .dockerignore are already configured in the repository)
-2. Put the url of your newly-hosted server in the BASE_URL in .env and re-deploy
+1. Host the service (you can either use Commit-to-deploy or Docker, Dockerfile and .dockerignore are already configured in the repository)
+2. Put the url of your server in the BASE_URL in .env
 
-Congrats! The backend is deployed!
+Congrats! The backend is all set up!
 
 ## Creating a project
 
@@ -40,6 +37,7 @@ Congrats! The backend is deployed!
 2. Choose a random id, name, user fields, leave chats as an empty array, lastseen and created_at fields should be automatically set to current time. Enter chatid
 
 ## Get your chatid
+
 1. Create a Telegram account (if you don’t have one) at telegram.org
 2. Create a Telegram group
 3. Go to the group's settings
@@ -50,6 +48,7 @@ Congrats! The backend is deployed!
 8. Copy the outputted Chat id and paste it here into the chatid field in the database row that you created on the previous step
 
 ## Self-hosting the frontend
+
 1. Clone the frontend repo (https://github.com/nihilanthmf/suprr-chat)
 2. Add your server url (BASE_URL) to the "websiteUrl" variable in the app.js file
 3. Add the app.js file to your project directory
