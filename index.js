@@ -26,24 +26,22 @@ const wss = new WebSocketServer({
 const port = process.env.PORT || 3000;
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
+const botBaseUrl = `https://api.telegram.org/bot${botToken}`;
 app.use(cors());
 app.use(express.json());
 
 async function createTopicInTelegram(user, telegramGroupId) {
-  const res = await fetch(
-    `https://api.telegram.org/bot${botToken}/createForumTopic`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: telegramGroupId,
-        name: `Topic for ${user}`,
-        icon_custom_emoji_id: "5237699328843200968",
-      }),
-    }
-  );
+  const res = await fetch(`${botBaseUrl}/createForumTopic`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      chat_id: telegramGroupId,
+      name: `Topic for ${user}`,
+      icon_custom_emoji_id: "5237699328843200968",
+    }),
+  });
 
   const resJson = res.json();
 
@@ -87,12 +85,23 @@ function broadcast(message) {
   });
 }
 
+async function sendMessageTelegram(telegramGroupId, messageThreadId, message) {
+  const sendMessageResponse = await axios.post(`${botBaseUrl}/sendMessage`, {
+    chat_id: telegramGroupId,
+    message_thread_id: messageThreadId,
+    text: message,
+    parse_mode: "HTML",
+  });
+
+  return sendMessageResponse;
+}
+
 async function setWebhook() {
-  const telegramApiUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
+  const telegramApiUrl = `${botBaseUrl}/setWebhook`;
 
   console.log("Setting webhook...");
 
-  await fetch(telegramApiUrl, {
+  const res = await fetch(telegramApiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -101,8 +110,11 @@ async function setWebhook() {
       url: `${process.env.BASE_URL}/webhook`,
       pending_update_count: 0,
       max_connections: 4000,
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "my_chat_member"],
     }),
+  });
+  res.json().then((e) => {
+    console.log(e);
   });
 }
 
@@ -110,8 +122,30 @@ app.post("/webhook", async (req, res) => {
   console.log("webhook reached!");
   const request = req.body;
 
+  // if the webhook was triggered by adding a bot to a new chat
+  if (request.my_chat_member) {
+    console.log("my_chat_member");
+    const chatId = request.my_chat_member.chat.id;
+    try {
+      sendMessageTelegram(chatId, null, `👋 Hello! This chat ID is: ${chatId}`)
+      // await fetch(`${botBaseUrl}/sendMessage`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     chat_id: chatId,
+      //     text: `👋 Hello! This chat ID is: ${chatId}`,
+      //   }),
+      // });
+      return res.status(200).json({ error: null });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      return res.status(400).json({ error });
+    }
+  }
+
+  // if the webhook was triggered by a new message
   if (
-    request.message !== undefined &&
+    request.message &&
     request.message.chat !== undefined &&
     request.message.text !== undefined
   ) {
@@ -160,7 +194,7 @@ app.post("/webhook", async (req, res) => {
     }
   }
 
-  res.status(200).json({ success: true });
+  return res.status(400).json({ error: null });
 });
 
 app.post("/message", async (req, res) => {
@@ -202,15 +236,7 @@ app.post("/message", async (req, res) => {
       messageThreadId = createTopicResponse.result.message_thread_id;
     }
 
-    const sendMessageResponse = await axios.post(
-      `https://api.telegram.org/bot${botToken}/sendMessage`,
-      {
-        chat_id: telegramGroupId,
-        message_thread_id: messageThreadId,
-        text: message,
-        parse_mode: "HTML",
-      }
-    );
+    sendMessageTelegram();
 
     await writeMessages(chat, user, project, messageThreadId, message, true);
 
