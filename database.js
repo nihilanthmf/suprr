@@ -29,17 +29,14 @@ export async function fetchProject(projectId) {
   }
 }
 
-export async function fetchProjectByChatid(chatId) {
+export async function fetchProjectIdByTelegramChatId(telegram_chat_id) {
   try {
     const res = await pool.query(
-      `SELECT p.*
-      FROM projects p
-      JOIN chats c ON c.project_id = p.id
-      WHERE c.id = $1;`,
-      [chatId]
+      `SELECT id FROM projects WHERE telegram_chat_id = $1`,
+      [telegram_chat_id]
     );
 
-    return res.rows[0];
+    return res.rows[0].id;
   } catch (error) {
     console.error("Error fetching project by chatId:", error);
     return null;
@@ -52,13 +49,16 @@ export async function fetchChatByProjectAndMessageThreadId(
 ) {
   try {
     const res = await pool.query(
-      "SELECT * FROM chats WHERE projectid = $1 AND messagethreadid = $2",
+      "SELECT * FROM chats WHERE project_id = $1 AND message_thread_id = $2",
       [projectId, messageThreadId]
     );
 
     return res.rows[0];
   } catch (error) {
-    console.error("Error fetching project by project and message_thread_id:", error);
+    console.error(
+      "Error fetching project by project and message_thread_id:",
+      error
+    );
     return null;
   }
 }
@@ -68,7 +68,7 @@ export async function updateLastSeen(project) {
 
   try {
     const res = await pool.query(
-      "UPDATE projects SET lastseen = $1 WHERE id = $2",
+      "UPDATE projects SET last_seen = $1 WHERE id = $2",
       [lastSeen, project]
     );
 
@@ -82,7 +82,7 @@ export async function updateLastSeen(project) {
 export async function fetchLastSeen(projectId) {
   try {
     const res = await pool.query(
-      "SELECT lastseen FROM projects WHERE id = $1",
+      "SELECT last_seen FROM projects WHERE id = $1",
       [projectId]
     );
 
@@ -93,33 +93,20 @@ export async function fetchLastSeen(projectId) {
   }
 }
 
-export async function writeMessages(
-  chat,
-  chatId,
-  project,
-  messageThreadId,
-  messageText,
-  isUser
-) {
-  const chatExists = !!chat;
+export async function createChat(project, sender, messageThreadId) {
+  const res = await pool.query(
+    "INSERT INTO chats (project_id, sender, message_thread_id) VALUES ($1, $2, $3) RETURNING *",
+    [project, sender, messageThreadId]
+  );
 
-  // create a new chat if it doesn't exist
-  if (!chatExists) {
-    await pool.query(
-      "INSERT INTO chats (id, project, messagethreadid) VALUES ($1, $2, $3)",
-      [chatId, project, messageThreadId]
-    );
-  }
+  return res.rows[0];
+}
 
-  const message = {
-    role: isUser ? "user" : "admin",
-    content: messageText,
-  };
-
+export async function writeMessages(chatId, messageText, isUser) {
   try {
     const res = await pool.query(
-      "UPDATE chats SET messages = $1 WHERE id = $2",
-      [chatExists ? [...chat.messages, message] : [message], chatId]
+      "INSERT INTO messages (chat_id, content, sender_role) VALUES ($1, $2, $3)",
+      [chatId, messageText, isUser ? "user" : "admin"]
     );
 
     return res.rows[0];
