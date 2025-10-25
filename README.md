@@ -1,3 +1,5 @@
+Currently in beta, if you face any issues please report them as soon as you can (or open a PR)
+
 ### How to self host Suprr
 
 Suprr consists of two components - a backend and a frontend. They are both in this repository under different folders:
