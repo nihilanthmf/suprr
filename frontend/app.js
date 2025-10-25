@@ -524,12 +524,10 @@
     }
   }
 
-  function sendMessage() {
-    const message = messageInput.value.trim();
+  // Base function for sending a message via web sockets
+  function sendMessage(message, messageType, sender_email) {
     if (message) {
       addMessage(message, false);
-
-      messageInput.value = "";
 
       if (!chatId) {
         chatId = crypto.randomUUID();
@@ -537,7 +535,9 @@
       }
 
       const socketMessage = JSON.stringify({
+        type: messageType,
         message_content: message,
+        sender_email,
         chatId,
         project: getAuthKeyFromScript(),
       });
@@ -550,28 +550,23 @@
     }
   }
 
-  // // //
+  // Send a user message via web sockets
+  function sendUserMessage() {
+    const message = messageInput.value.trim();
+    messageInput.value = "";
+    sendMessage(message, "message");
+  }
+
+  // Send a user email via web sockets
   function sendEmail() {
     const email = emailInput.value.trim();
     if (email && email.includes("@") && email.includes(".")) {
       emailInput.value = "";
+      sendMessage(`Email submitted: ${email}`, "email", email);
 
-      if (!chatId) {
-        chatId = crypto.randomUUID();
-        localStorage.setItem("suprrChatId", chatId);
-      }
-
-      const socketMessage = JSON.stringify({
-        message_content: message,
-        chatId,
-        project: getAuthKeyFromScript(),
-      });
-
-      if (!socket) {
-        initializeSocket(chatId, socketMessage);
-      } else {
-        socket.send(socketMessage);
-      }
+      chatGreeting.style.display = "none";
+      chatMessages.style.display = "block";
+      chatInput.style.display = "block";
     } else {
       emailInput.parentElement.style.backgroundColor =
         errorInputBackgroundColor;
@@ -581,13 +576,26 @@
 
   emailButton.addEventListener("click", sendEmail);
 
-  sendButton.addEventListener("click", sendMessage);
+  sendButton.addEventListener("click", sendUserMessage);
 
-  emailInput.addEventListener("keydown", () => {
-    if (emailInput.value.length <= 1) {
+  // Clearing the error state of the email input
+  emailInput.addEventListener("input", () => {
+    if (emailInput.value === "") {
       emailInput.parentElement.style.backgroundColor =
         defaultInputBackgroundColor;
       emailInput.parentElement.style.borderColor = defaultInputBorderColor;
+    }
+  });
+
+  emailInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      emailButton.click();
+    }
+  });
+
+  chatInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      sendButton.click();
     }
   });
 

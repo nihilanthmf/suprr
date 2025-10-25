@@ -10,6 +10,7 @@ import {
   fetchLastSeen,
   createChat,
   fetchChatMessages,
+  updateChatEmail,
 } from "./database.js";
 import "dotenv/config";
 import WebSocket, { WebSocketServer } from "ws";
@@ -32,10 +33,10 @@ const botBaseUrl = `https://api.telegram.org/bot${botToken}`;
 app.use(cors());
 app.use(express.json());
 
-async function createTopicInTelegram(sender, telegramGroupId) {
+async function createTopicInTelegram(sender_email, telegramGroupId) {
   const res = await httpRequest(`${botBaseUrl}/createForumTopic`, "POST", {
     chat_id: telegramGroupId,
-    name: `Topic for ${sender}`,
+    name: `Topic for ${sender_email}`,
     icon_custom_emoji_id: "5237699328843200968",
   });
   return res;
@@ -64,11 +65,11 @@ wss.on("connection", (ws, req) => {
 
   ws.on("message", async (message) => {
     try {
-      const { message_content, chatId, project } = JSON.parse(
-        message.toString()
-      );
+      const messageBody = JSON.parse(message.toString());
 
-      const sender = "default_sender";
+      const { message_content, chatId, project } = messageBody;
+
+      const sender_email = "default_sender";
 
       if (!message_content) {
         throw new Error("Message is required");
@@ -90,7 +91,7 @@ wss.on("connection", (ws, req) => {
         messageThreadId = chatObject.message_thread_id;
       } else {
         const createTopicResponse = await createTopicInTelegram(
-          sender,
+          sender_email,
           telegramGroupId
         );
 
@@ -100,7 +101,7 @@ wss.on("connection", (ws, req) => {
 
         messageThreadId = createTopicResponse.result.message_thread_id;
 
-        await createChat(chatId, projectData.id, sender, messageThreadId);
+        await createChat(chatId, projectData.id, sender_email, messageThreadId);
       }
 
       await sendMessageTelegram(
@@ -110,6 +111,10 @@ wss.on("connection", (ws, req) => {
       );
 
       await writeMessages(chatId, message_content, true);
+      
+      if (messageBody.type === "email") {
+        updateChatEmail(messageBody.chatId, messageBody.sender_email);
+      }
     } catch (error) {
       console.error(
         "Something went wrong when receiving client WS message:",

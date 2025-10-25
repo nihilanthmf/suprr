@@ -106,10 +106,24 @@ export async function fetchLastSeen(projectId) {
   }
 }
 
-export async function createChat(chatId, project, sender, messageThreadId) {
+export async function createChat(
+  chatId,
+  project,
+  sender_email,
+  messageThreadId
+) {
   const res = await pool.query(
-    "INSERT INTO chats (id, project_id, sender, message_thread_id) VALUES ($1, $2, $3, $4) RETURNING *",
-    [chatId, project, sender, messageThreadId]
+    "INSERT INTO chats (id, project_id, sender_email, message_thread_id) VALUES ($1, $2, $3, $4) RETURNING *",
+    [chatId, project, sender_email, messageThreadId]
+  );
+
+  return res.rows[0];
+}
+
+export async function updateChatEmail(chatId, sender_email) {
+  const res = await pool.query(
+    "UPDATE chats SET sender_email = $1 WHERE id = $2",
+    [sender_email, chatId]
   );
 
   return res.rows[0];
