@@ -11,7 +11,7 @@ CREATE TABLE projects (
 );
 
 CREATE TABLE chats (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY,
     project_id UUID REFERENCES projects(id),
     message_thread_id TEXT,
     sender TEXT

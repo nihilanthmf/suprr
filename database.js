@@ -16,6 +16,21 @@ export async function fetchChat(chatId) {
   }
 }
 
+export async function fetchChatMessages(chatId) {
+  try {
+    const res = await pool.query("SELECT * FROM messages WHERE chat_id = $1", [
+      chatId,
+    ]);
+
+    console.log(res);
+
+    return res.rows;
+  } catch (error) {
+    console.error("Error fetching chat:", error);
+    return null;
+  }
+}
+
 export async function fetchProject(projectId) {
   try {
     const res = await pool.query("SELECT * FROM projects WHERE id = $1", [
@@ -93,25 +108,20 @@ export async function fetchLastSeen(projectId) {
   }
 }
 
-export async function createChat(project, sender, messageThreadId) {
+export async function createChat(chatId, project, sender, messageThreadId) {
   const res = await pool.query(
-    "INSERT INTO chats (project_id, sender, message_thread_id) VALUES ($1, $2, $3) RETURNING *",
-    [project, sender, messageThreadId]
+    "INSERT INTO chats (id, project_id, sender, message_thread_id) VALUES ($1, $2, $3, $4) RETURNING *",
+    [chatId, project, sender, messageThreadId]
   );
 
   return res.rows[0];
 }
 
 export async function writeMessages(chatId, messageText, isUser) {
-  try {
-    const res = await pool.query(
-      "INSERT INTO messages (chat_id, content, sender_role) VALUES ($1, $2, $3)",
-      [chatId, messageText, isUser ? "user" : "admin"]
-    );
+  const res = await pool.query(
+    "INSERT INTO messages (chat_id, content, sender_role) VALUES ($1, $2, $3) RETURNING *",
+    [chatId, messageText, isUser ? "user" : "admin"]
+  );
 
-    return res.rows[0];
-  } catch (error) {
-    console.error("Error writing message:", error);
-    return null;
-  }
+  return res.rows[0];
 }

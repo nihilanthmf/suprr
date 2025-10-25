@@ -10,6 +10,7 @@ import {
   updateLastSeen,
   fetchLastSeen,
   createChat,
+  fetchChatMessages,
 } from "./database.js";
 import "dotenv/config";
 import WebSocket, { WebSocketServer } from "ws";
@@ -78,7 +79,9 @@ wss.on("connection", (ws, req) => {
 });
 
 function broadcast(message) {
+  console.log(clients.size);
   clients.forEach((ws) => {
+    console.log(ws.readyState, ws.chatId, message.chatId);
     if (ws.readyState === WebSocket.OPEN && ws.chatId === message.chatId) {
       console.log(JSON.stringify(message));
       ws.send(JSON.stringify(message));
@@ -127,7 +130,6 @@ app.post("/webhook", async (req, res) => {
 
   // if the webhook was triggered by adding a bot to a new chat
   if (request.my_chat_member) {
-    console.log("my_chat_member");
     const chatId = request.my_chat_member.chat.id;
     try {
       sendMessageTelegram(chatId, null, `👋 Hello! This chat ID is: ${chatId}`);
@@ -149,6 +151,8 @@ app.post("/webhook", async (req, res) => {
     const text = request.message.text;
     const is_bot = request.message.from.is_bot;
 
+    console.log(message_thread_id, telegram_chat_id, text, is_bot);
+
     if (
       message_thread_id !== undefined &&
       telegram_chat_id !== undefined &&
@@ -160,6 +164,8 @@ app.post("/webhook", async (req, res) => {
         projectId,
         message_thread_id
       );
+
+      console.log(projectId, chat);
 
       if (chat) {
         console.log("chat found!");
@@ -189,12 +195,14 @@ app.post("/message", async (req, res) => {
   try {
     console.log("Message received");
     const { message, chatId, project } = req.body;
+    const sender = "default_sender";
 
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
     }
 
     const projectData = await fetchProject(project);
+    console.log(projectData);
 
     const telegramGroupId = projectData.telegram_chat_id;
 
@@ -206,21 +214,13 @@ app.post("/message", async (req, res) => {
 
     let messageThreadId = null;
 
-    // if the chat already exists
-    if (chatId) {
-      const chat = await fetchChat(chatId);
+    const chatObject = await fetchChat(chatId);
 
-      messageThreadId = chat.message_thread_id;
+    if (chatObject) {
+      messageThreadId = chatObject.message_thread_id;
     } else {
-      // if the chat does not exist
-      const res = await createChat(
-        projectData.id,
-        "default_sender",
-        messageThreadId
-      );
-
       const createTopicResponse = await createTopicInTelegram(
-        res.sender,
+        sender,
         telegramGroupId
       );
 
@@ -230,17 +230,14 @@ app.post("/message", async (req, res) => {
 
       messageThreadId = createTopicResponse.result.message_thread_id;
 
-      chatId = res.id;
-      console.log("chatId :>> ", chatId);
+      console.log(chatId, projectData.id, sender, messageThreadId);
+
+      await createChat(chatId, projectData.id, sender, messageThreadId);
     }
 
     await sendMessageTelegram(telegramGroupId, messageThreadId, message);
 
     await writeMessages(chatId, message, true);
-
-    if (!sendMessageResponse.data.ok) {
-      throw new Error("Failed to send message");
-    }
 
     res.status(200).json({
       success: true,
@@ -257,17 +254,17 @@ app.post("/message", async (req, res) => {
   }
 });
 
-app.get("/fetch-chat/:chatId", async (req, res) => {
+app.get("/fetch-chat-messages/:chatId", async (req, res) => {
   const { chatId } = req.params;
   try {
-    const chat = await fetchChat(chatId);
-    if (!chat) {
+    const chatMessages = await fetchChatMessages(chatId);
+    if (!chatMessages) {
       return res.status(404).json({ error: "Chat not found" });
     }
-    res.status(200).json(chat);
+    res.status(200).json(chatMessages);
   } catch (error) {
-    console.error("Error fetching chat:", error);
-    res.status(500).json({ error: "Failed to fetch chat data" });
+    console.error("Error fetching chat messages:", error);
+    res.status(500).json({ error: "Failed to fetch chat messages" });
   }
 });
 
