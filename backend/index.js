@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import axios from "axios";
 import {
   writeMessages,
   fetchChat,
@@ -16,6 +15,7 @@ import "dotenv/config";
 import WebSocket, { WebSocketServer } from "ws";
 import http from "http";
 import url from "url";
+import httpRequest from "./httpRequest.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -33,21 +33,12 @@ app.use(cors());
 app.use(express.json());
 
 async function createTopicInTelegram(sender, telegramGroupId) {
-  const res = await fetch(`${botBaseUrl}/createForumTopic`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      chat_id: telegramGroupId,
-      name: `Topic for ${sender}`,
-      icon_custom_emoji_id: "5237699328843200968",
-    }),
+  const res = await httpRequest(`${botBaseUrl}/createForumTopic`, "POST", {
+    chat_id: telegramGroupId,
+    name: `Topic for ${sender}`,
+    icon_custom_emoji_id: "5237699328843200968",
   });
-
-  const resJson = res.json();
-
-  return resJson;
+  return res;
 }
 
 const clients = new Set();
@@ -72,13 +63,11 @@ wss.on("connection", (ws, req) => {
   });
 
   ws.on("message", async (message) => {
-    console.log("Message received!!");
     try {
-      console.log(message.toString());
       const { message_content, chatId, project } = JSON.parse(
         message.toString()
       );
-      console.log(message_content, chatId, project);
+
       const sender = "default_sender";
 
       if (!message_content) {
@@ -139,35 +128,32 @@ function broadcast(message) {
 }
 
 async function sendMessageTelegram(telegramGroupId, messageThreadId, message) {
-  const sendMessageResponse = await axios.post(`${botBaseUrl}/sendMessage`, {
-    chat_id: telegramGroupId,
-    message_thread_id: messageThreadId,
-    text: message,
-    parse_mode: "HTML",
-  });
+  const sendMessageResponse = await httpRequest(
+    `${botBaseUrl}/sendMessage`,
+    "POST",
+    {
+      chat_id: telegramGroupId,
+      message_thread_id: messageThreadId,
+      text: message,
+      parse_mode: "HTML",
+    }
+  );
 
   return sendMessageResponse;
 }
 
-async function setWebhook() {
+function setWebhook() {
   const telegramApiUrl = `${botBaseUrl}/setWebhook`;
 
   console.log("Setting webhook...");
 
-  const res = await fetch(telegramApiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      url: `${process.env.BASE_URL}/webhook`,
-      pending_update_count: 0,
-      max_connections: 4000,
-      allowed_updates: ["message", "my_chat_member"],
-      drop_pending_updates: true,
-    }),
-  });
-  res.json().then((e) => {
+  httpRequest(telegramApiUrl, "POST", {
+    url: `${process.env.BASE_URL}/webhook`,
+    pending_update_count: 0,
+    max_connections: 4000,
+    allowed_updates: ["message", "my_chat_member"],
+    drop_pending_updates: true,
+  }).then((e) => {
     console.log("set webhook result:", e);
   });
 }

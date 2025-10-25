@@ -1,9 +1,6 @@
-(function () {
-  const httpProtocol = "https://";
-  const wsProtocol = "wss://";
-
-  const style = document.createElement("style");
-  style.textContent = `
+<html>
+  <head>
+    <style>
       .suprr-chat-button {
         position: fixed;
         bottom: 20px;
@@ -158,7 +155,6 @@
         width: 100%;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         box-sizing: border-box;
-        transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
       }
       input {
         flex: 1;
@@ -225,10 +221,9 @@
         border-radius: 100%;
         z-index: 0;
       }
-    `;
-  document.head.appendChild(style);
-
-  const chatHTML = `
+    </style>
+  </head>
+  <body>
     <div class="suprr-chat-button" id="suprrChatButton">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -273,10 +268,10 @@
           <div class="suprr-chat-input-container">
             <input
               type="text"
-              id="suprrEmailInput"
+              id="suprrMessageInput"
               placeholder="john@gmail.com"
             />
-            <button id="suprrEmailButton">
+            <button id="suprrSendButton">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
@@ -329,271 +324,5 @@
         </div>
       </div>
     </div>
-  `;
-  const container = document.createElement("div");
-  container.innerHTML = chatHTML;
-  document.body.appendChild(container);
-
-  function getAuthKeyFromScript() {
-    const scripts = document.getElementsByTagName("script");
-    for (let script of scripts) {
-      if (script.src && script.src.includes("app.js")) {
-        const url = new URL(script.src, window.location.origin);
-        return url.searchParams.get("projectKey");
-      }
-    }
-    return null;
-  }
-
-  function getServerUrlFromScript() {
-    const scripts = document.getElementsByTagName("script");
-    for (let script of scripts) {
-      if (script.src && script.src.includes("app.js")) {
-        const url = new URL(script.src, window.location.origin);
-        return url.searchParams.get("serverUrl");
-      }
-    }
-    return null;
-  }
-
-  const chatButton = document.getElementById("suprrChatButton");
-  const chatWindow = document.getElementById("suprrChatWindow");
-  const closeButton = document.getElementById("suprrCloseButton");
-  const messageInput = document.getElementById("suprrMessageInput");
-  const sendButton = document.getElementById("suprrSendButton");
-  const emailButton = document.getElementById("suprrEmailButton");
-  const emailInput = document.getElementById("suprrEmailInput");
-  const chatMessages = document.getElementById("suprrChatMessages");
-  const chatGreeting = document.getElementById("suprrChatGreeting");
-  const chatInput = document.getElementById("suprrChatInput");
-  const chatHeader = document.getElementById("suprrChatHeader");
-  const lastSeen = document.getElementById("suprrLastSeen");
-
-  const defaultInputBackgroundColor =
-    emailInput.parentElement.style.backgroundColor;
-  const defaultInputBorderColor = emailInput.parentElement.style.borderColor;
-
-  const errorInputBackgroundColor = "#ff000010";
-  const errorInputBorderColor = "#ff000020";
-
-  function adjustChatMessagesPadding() {
-    if (chatInput && chatMessages) {
-      chatWindow.style.display = "block";
-      const inputHeight = chatInput.offsetHeight;
-      const chatHeaderHeight = chatHeader.offsetHeight;
-      chatWindow.style.display = "none";
-      chatMessages.style.paddingBottom = inputHeight + "px";
-      chatMessages.style.paddingTop = chatHeaderHeight + 12 + "px";
-    }
-  }
-
-  window.addEventListener("DOMContentLoaded", adjustChatMessagesPadding);
-
-  window.addEventListener("resize", adjustChatMessagesPadding);
-
-  let socket = null;
-
-  async function fetchChat(chatId) {
-    const response = await fetch(
-      `${httpProtocol}${getServerUrlFromScript()}/fetch-chat-messages/${chatId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "GET",
-      }
-    );
-    const data = await response.json();
-
-    if (response.ok) {
-      if (data.length !== 0) {
-        chatGreeting.style.display = "none";
-        chatMessages.style.display = "block";
-        chatInput.style.display = "block";
-      }
-
-      for (const message of data) {
-        addMessage(message.content, message.sender_role === "admin");
-      }
-
-      return data;
-    }
-
-    return null;
-  }
-
-  async function fetchLastSeen() {
-    const response = await fetch(
-      `${httpProtocol}${getServerUrlFromScript()}/fetch-last-seen/${getAuthKeyFromScript()}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "GET",
-      }
-    );
-    const lastSeenData = await response.json();
-
-    const lastSeenDate = new Date(lastSeenData);
-
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    let lastSeenText = "";
-    let lastSeenTime = `${lastSeenDate.getHours()}:${lastSeenDate
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}`;
-
-    if (lastSeenDate.toDateString() === today.toDateString()) {
-      lastSeenText = `Last seen today at ${lastSeenTime}`;
-    } else if (lastSeenDate.toDateString() === yesterday.toDateString()) {
-      lastSeenText = `Last seen yesterday at ${lastSeenTime}`;
-    } else {
-      lastSeenText = `Last seen on ${lastSeenDate.toLocaleString("en-US", {
-        month: "long",
-      })} ${lastSeenDate.getDate()} at ${lastSeenTime}`;
-    }
-
-    lastSeen.textContent = lastSeenText;
-  }
-
-  let chatId = localStorage.getItem("suprrChatId");
-
-  if (chatId) {
-    fetchChat(chatId);
-    fetchLastSeen();
-  } else {
-    // ask for user's contact details
-  }
-
-  chatButton.addEventListener("click", () => {
-    chatWindow.style.display =
-      chatWindow.style.display === "flex" ? "none" : "flex";
-  });
-
-  closeButton.addEventListener("click", () => {
-    chatWindow.style.display = "none";
-  });
-
-  function addMessage(content, isAdmin) {
-    chatGreeting.style.display = "none";
-    chatMessages.style.display = "block";
-
-    const message = document.createElement("div");
-    message.className = isAdmin
-      ? "suprr-message suprr-bot-message"
-      : "suprr-message suprr-user-message";
-    message.textContent = content;
-
-    chatMessages.appendChild(message);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  function initializeSocket(chatId, messageWhenOpen) {
-    if (
-      !socket ||
-      socket.readyState === WebSocket.CLOSED ||
-      socket.readyState === WebSocket.CLOSING
-    ) {
-      socket = new WebSocket(
-        `${wsProtocol}${getServerUrlFromScript()}/ws?chatId=${chatId}`
-      );
-
-      console.log("Opening ws connection...");
-
-      // When the connection is open
-      socket.addEventListener("open", () => {
-        console.log("WS connection opened!");
-        if (messageWhenOpen) {
-          socket.send(messageWhenOpen);
-        } else {
-          socket.send("Hello from client");
-        }
-      });
-
-      // When a message is received
-      socket.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.data.chat_id === chatId) {
-          addMessage(data.data.text, true);
-        }
-      });
-    }
-  }
-
-  function sendMessage() {
-    const message = messageInput.value.trim();
-    if (message) {
-      addMessage(message, false);
-
-      messageInput.value = "";
-
-      if (!chatId) {
-        chatId = crypto.randomUUID();
-        localStorage.setItem("suprrChatId", chatId);
-      }
-
-      const socketMessage = JSON.stringify({
-        message_content: message,
-        chatId,
-        project: getAuthKeyFromScript(),
-      });
-
-      if (!socket) {
-        initializeSocket(chatId, socketMessage);
-      } else {
-        socket.send(socketMessage);
-      }
-    }
-  }
-
-  // // //
-  function sendEmail() {
-    const email = emailInput.value.trim();
-    if (email && email.includes("@") && email.includes(".")) {
-      emailInput.value = "";
-
-      if (!chatId) {
-        chatId = crypto.randomUUID();
-        localStorage.setItem("suprrChatId", chatId);
-      }
-
-      const socketMessage = JSON.stringify({
-        message_content: message,
-        chatId,
-        project: getAuthKeyFromScript(),
-      });
-
-      if (!socket) {
-        initializeSocket(chatId, socketMessage);
-      } else {
-        socket.send(socketMessage);
-      }
-    } else {
-      emailInput.parentElement.style.backgroundColor =
-        errorInputBackgroundColor;
-      emailInput.parentElement.style.borderColor = errorInputBorderColor;
-    }
-  }
-
-  emailButton.addEventListener("click", sendEmail);
-
-  sendButton.addEventListener("click", sendMessage);
-
-  emailInput.addEventListener("keydown", () => {
-    if (emailInput.value.length <= 1) {
-      emailInput.parentElement.style.backgroundColor =
-        defaultInputBackgroundColor;
-      emailInput.parentElement.style.borderColor = defaultInputBorderColor;
-    }
-  });
-
-  messageInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
-  });
-})();
+  </body>
+</html>
