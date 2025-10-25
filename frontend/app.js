@@ -367,8 +367,6 @@
     );
     const data = await response.json();
 
-    console.log(data);
-
     if (response.ok) {
       if (data.length !== 0) {
         chatGreeting.style.display = "none";
@@ -386,7 +384,6 @@
   }
 
   async function fetchLastSeen() {
-    console.log("fetch last seen");
     const response = await fetch(
       `${httpProtocol}${getServerUrlFromScript()}/fetch-last-seen/${getAuthKeyFromScript()}`,
       {
@@ -405,7 +402,10 @@
     yesterday.setDate(today.getDate() - 1);
 
     let lastSeenText = "";
-    let lastSeenTime = `${lastSeenDate.getHours()}:${lastSeenDate.getMinutes()}`;
+    let lastSeenTime = `${lastSeenDate.getHours()}:${lastSeenDate
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
 
     if (lastSeenDate.toDateString() === today.toDateString()) {
       lastSeenText = `Last seen today at ${lastSeenTime}`;
@@ -448,7 +448,7 @@
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  function initializeSocket(chatId) {
+  function initializeSocket(chatId, messageWhenOpen) {
     if (
       !socket ||
       socket.readyState === WebSocket.CLOSED ||
@@ -458,9 +458,17 @@
         `${wsProtocol}${getServerUrlFromScript()}/ws?chatId=${chatId}`
       );
 
+      console.log("Opening ws connection...");
+
       // When the connection is open
       socket.addEventListener("open", () => {
-        socket.send("Hello from client");
+        console.log("WS connection opened!");
+        if (messageWhenOpen) {
+          console.log("object", messageWhenOpen);
+          socket.send(messageWhenOpen);
+        } else {
+          socket.send("Hello from client");
+        }
       });
 
       // When a message is received
@@ -482,23 +490,21 @@
       messageInput.value = "";
 
       if (!chatId) {
-        const chatId = crypto.randomUUID();
+        chatId = crypto.randomUUID();
         localStorage.setItem("suprrChatId", chatId);
       }
 
-      fetch(`${httpProtocol}${getServerUrlFromScript()}/message`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify({
-          message,
-          chatId,
-          project: getAuthKeyFromScript(),
-        }),
+      const socketMessage = JSON.stringify({
+        message_content: message,
+        chatId,
+        project: getAuthKeyFromScript(),
       });
 
-      initializeSocket(chatId);
+      if (!socket) {
+        initializeSocket(chatId, socketMessage);
+      } else {
+        socket.send(socketMessage);
+      }
     }
   }
 

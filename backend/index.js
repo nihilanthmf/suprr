@@ -69,21 +69,70 @@ wss.on("connection", (ws, req) => {
   ws.on("close", () => {
     clients.delete(ws);
     console.log(`Client disconnected with chatId: ${ws.chatId}`);
-
-    console.log("Client disconnected");
   });
 
-  ws.on("message", (message) => {
-    console.log("WS received:", message);
+  ws.on("message", async (message) => {
+    console.log("Message received!!");
+    try {
+      console.log(message.toString());
+      const { message_content, chatId, project } = JSON.parse(
+        message.toString()
+      );
+      console.log(message_content, chatId, project);
+      const sender = "default_sender";
+
+      if (!message_content) {
+        throw new Error("Message is required");
+      }
+
+      const projectData = await fetchProject(project);
+
+      const telegramGroupId = projectData.telegram_chat_id;
+
+      if (!botToken || !telegramGroupId) {
+        throw new Error("Telegram configuration is missing");
+      }
+
+      let messageThreadId = null;
+
+      const chatObject = await fetchChat(chatId);
+
+      if (chatObject) {
+        messageThreadId = chatObject.message_thread_id;
+      } else {
+        const createTopicResponse = await createTopicInTelegram(
+          sender,
+          telegramGroupId
+        );
+
+        if (!createTopicResponse.ok) {
+          throw new Error("Failed to create forum topic");
+        }
+
+        messageThreadId = createTopicResponse.result.message_thread_id;
+
+        await createChat(chatId, projectData.id, sender, messageThreadId);
+      }
+
+      await sendMessageTelegram(
+        telegramGroupId,
+        messageThreadId,
+        message_content
+      );
+
+      await writeMessages(chatId, message_content, true);
+    } catch (error) {
+      console.error(
+        "Something went wrong when receiving client WS message:",
+        error
+      );
+    }
   });
 });
 
 function broadcast(message) {
-  console.log(clients.size);
   clients.forEach((ws) => {
-    console.log(ws.readyState, ws.chatId, message.chatId);
     if (ws.readyState === WebSocket.OPEN && ws.chatId === message.chatId) {
-      console.log(JSON.stringify(message));
       ws.send(JSON.stringify(message));
     }
   });
@@ -126,7 +175,6 @@ async function setWebhook() {
 app.post("/webhook", async (req, res) => {
   console.log("webhook reached!");
   const request = req.body;
-  console.log(request);
 
   // if the webhook was triggered by adding a bot to a new chat
   if (request.my_chat_member) {
@@ -151,8 +199,6 @@ app.post("/webhook", async (req, res) => {
     const text = request.message.text;
     const is_bot = request.message.from.is_bot;
 
-    console.log(message_thread_id, telegram_chat_id, text, is_bot);
-
     if (
       message_thread_id !== undefined &&
       telegram_chat_id !== undefined &&
@@ -164,8 +210,6 @@ app.post("/webhook", async (req, res) => {
         projectId,
         message_thread_id
       );
-
-      console.log(projectId, chat);
 
       if (chat) {
         console.log("chat found!");
@@ -191,69 +235,6 @@ app.post("/webhook", async (req, res) => {
   return res.status(200).json({ error: null });
 });
 
-app.post("/message", async (req, res) => {
-  try {
-    console.log("Message received");
-    const { message, chatId, project } = req.body;
-    const sender = "default_sender";
-
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
-    }
-
-    const projectData = await fetchProject(project);
-    console.log(projectData);
-
-    const telegramGroupId = projectData.telegram_chat_id;
-
-    if (!botToken || !telegramGroupId) {
-      return res
-        .status(500)
-        .json({ error: "Telegram configuration is missing" });
-    }
-
-    let messageThreadId = null;
-
-    const chatObject = await fetchChat(chatId);
-
-    if (chatObject) {
-      messageThreadId = chatObject.message_thread_id;
-    } else {
-      const createTopicResponse = await createTopicInTelegram(
-        sender,
-        telegramGroupId
-      );
-
-      if (!createTopicResponse.ok) {
-        throw new Error("Failed to create forum topic");
-      }
-
-      messageThreadId = createTopicResponse.result.message_thread_id;
-
-      console.log(chatId, projectData.id, sender, messageThreadId);
-
-      await createChat(chatId, projectData.id, sender, messageThreadId);
-    }
-
-    await sendMessageTelegram(telegramGroupId, messageThreadId, message);
-
-    await writeMessages(chatId, message, true);
-
-    res.status(200).json({
-      success: true,
-      message: "Message sent successfully",
-      topicId: messageThreadId,
-      chatId,
-    });
-  } catch (error) {
-    console.error("Telegram API Error:", error);
-    res.status(500).json({
-      error: "Failed to send message to Telegram",
-      details: null,
-    });
-  }
-});
-
 app.get("/fetch-chat-messages/:chatId", async (req, res) => {
   const { chatId } = req.params;
   try {
@@ -273,7 +254,6 @@ app.get("/fetch-last-seen/:projectId", async (req, res) => {
 
   try {
     const lastSeenObj = await fetchLastSeen(projectId);
-    console.log(lastSeenObj, projectId);
 
     if (!lastSeenObj || !lastSeenObj.last_seen) {
       return res.status(404).json({ error: "Last seen not found" });

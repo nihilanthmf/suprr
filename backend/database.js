@@ -22,8 +22,6 @@ export async function fetchChatMessages(chatId) {
       chatId,
     ]);
 
-    console.log(res);
-
     return res.rows;
   } catch (error) {
     console.error("Error fetching chat:", error);

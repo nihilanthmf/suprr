@@ -5,3 +5,4 @@
 /frontend/.DS_Store
 /frontend/test.html
 todo
+*.sh
