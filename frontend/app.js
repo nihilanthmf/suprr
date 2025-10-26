@@ -245,6 +245,121 @@
     `;
   document.head.appendChild(style);
 
+  function setLanguageBasedText() {
+    const languageBasedText = {
+      en: {
+        header: "Customer Support",
+        headerGreeting: "Welcome to our Customer Support!",
+        greetingDescription:
+          "Feel free to ask any questions about the software or give feedback! We will reply as soon as we can!",
+        emailPromptText:
+          "Please enter your email to receive the reply even if you’re offline",
+        messagePlaceholder: "Type your message...",
+      },
+      es: {
+        header: "Atención al Cliente",
+        headerGreeting:
+          "¡Bienvenido a nuestro servicio de atención al cliente!",
+        greetingDescription:
+          "No dudes en hacer cualquier pregunta sobre el software o darnos tu opinión. ¡Responderemos lo antes posible!",
+        emailPromptText:
+          "Por favor, ingresa tu correo electrónico para recibir la respuesta incluso si estás desconectado",
+        messagePlaceholder: "Escribe tu mensaje...",
+      },
+      de: {
+        header: "Kundensupport",
+        headerGreeting: "Willkommen beim Kundensupport!",
+        greetingDescription:
+          "Stellen Sie gerne Fragen zur Software oder geben Sie Feedback! Wir antworten so schnell wie möglich.",
+        emailPromptText:
+          "Bitte geben Sie Ihre E-Mail ein, um die Antwort auch offline zu erhalten",
+        messagePlaceholder: "Nachricht eingeben...",
+      },
+      fr: {
+        header: "Support Client",
+        headerGreeting: "Bienvenue dans notre support client !",
+        greetingDescription:
+          "N'hésitez pas à poser vos questions sur le logiciel ou à nous donner votre avis ! Nous vous répondrons dès que possible.",
+        emailPromptText:
+          "Veuillez entrer votre e-mail pour recevoir la réponse même si vous êtes hors ligne",
+        messagePlaceholder: "Tapez votre message...",
+      },
+      zh: {
+        header: "客户支持",
+        headerGreeting: "欢迎来到我们的客户支持！",
+        greetingDescription:
+          "欢迎您咨询关于软件的任何问题或提出反馈！我们会尽快回复您！",
+        emailPromptText: "请输入您的邮箱，即使离线也能收到回复",
+        messagePlaceholder: "输入您的消息…",
+      },
+      ar: {
+        header: "دعم العملاء",
+        headerGreeting: "مرحبًا بك في دعم العملاء!",
+        greetingDescription:
+          "لا تتردد في طرح أي أسئلة حول البرنامج أو تقديم ملاحظاتك! سنرد عليك في أقرب وقت ممكن.",
+        emailPromptText:
+          "يرجى إدخال بريدك الإلكتروني لتلقي الرد حتى إذا كنت غير متصل بالإنترنت",
+        messagePlaceholder: "اكتب رسالتك...",
+      },
+      pt: {
+        header: "Suporte ao Cliente",
+        headerGreeting: "Bem-vindo ao nosso Suporte ao Cliente!",
+        greetingDescription:
+          "Sinta-se à vontade para fazer perguntas sobre o software ou enviar feedback! Responderemos o mais rápido possível.",
+        emailPromptText:
+          "Digite seu e-mail para receber a resposta mesmo se estiver offline",
+        messagePlaceholder: "Digite sua mensagem...",
+      },
+      hi: {
+        header: "ग्राहक सहायता",
+        headerGreeting: "हमारे ग्राहक सहायता में आपका स्वागत है!",
+        greetingDescription:
+          "सॉफ़्टवेयर से संबंधित कोई भी प्रश्न पूछने या अपनी प्रतिक्रिया देने के लिए स्वतंत्र महसूस करें! हम जल्द से जल्द जवाब देंगे।",
+        emailPromptText:
+          "कृपया अपना ईमेल दर्ज करें ताकि आप ऑफ़लाइन होने पर भी जवाब प्राप्त कर सकें",
+        messagePlaceholder: "अपना संदेश लिखें...",
+      },
+      ru: {
+        header: "Поддержка клиентов",
+        headerGreeting: "Добро пожаловать в службу поддержки клиентов!",
+        greetingDescription:
+          "Не стесняйтесь задавать любые вопросы о программе или оставлять отзывы! Мы ответим как можно скорее.",
+        emailPromptText:
+          "Пожалуйста, укажите свой email, чтобы получить ответ, даже если вы офлайн",
+        messagePlaceholder: "Введите сообщение...",
+      },
+      sk: {
+        header: "Zákaznícka podpora",
+        headerGreeting: "Vitajte v našej zákazníckej podpore!",
+        greetingDescription:
+          "Neváhajte sa opýtať na čokoľvek ohľadom softvéru alebo nám dajte spätnú väzbu! Odpovieme vám čo najskôr.",
+        emailPromptText:
+          "Zadajte svoj e-mail, aby ste dostali odpoveď aj v prípade, že budete offline",
+        messagePlaceholder: "Napíšte svoju správu...",
+      },
+      cs: {
+        header: "Zákaznická podpora",
+        headerGreeting: "Vítejte v naší zákaznické podpoře!",
+        greetingDescription:
+          "Neváhejte se zeptat na cokoli ohledně softwaru nebo nám dejte zpětnou vazbu! Odpovíme vám co nejdříve.",
+        emailPromptText:
+          "Zadejte svůj e-mail, abyste dostali odpověď i v případě, že budete offline",
+        messagePlaceholder: "Napište svou zprávu...",
+      },
+    };
+
+    let currentLanguageText = languageBasedText["en"];
+    for (let i = 0; i < navigator.languages.length; i++) {
+      const browserLanguage = navigator.languages[i].slice(0, 2);
+      if (browserLanguage in languageBasedText) {
+        currentLanguageText = languageBasedText[browserLanguage];
+        break;
+      }
+    }
+    return currentLanguageText
+  }
+  currentLanguageText = setLanguageBasedText();
+
   const chatHTML = `
     <div class="suprr-chat-button" id="suprrChatButton">
       <svg
@@ -268,7 +383,7 @@
       <div class="suprr-color-background-2"></div>
       <div class="suprr-chat-blur"></div>
       <div class="suprr-chat-header" id="suprrChatHeader">
-        <h3>Customer Support</h3>
+        <h3>${currentLanguageText.header}</h3>
         <p id="suprrLastSeen"></p>
         <button class="suprr-close-button" id="suprrCloseButton">
           &times;
@@ -276,19 +391,15 @@
       </div>
       <div class="suprr-chat-greeting" id="suprrChatGreeting">
         <h1>🤗</h1>
-        <h2>Welcome to our Customer Support!</h2>
-        <p>
-          Feel free to ask any questions about the software or give feedback! We will reply as soon as we can!
-        </p>
+        <h2>${currentLanguageText.headerGreeting}</h2>
+        <p>${currentLanguageText.greetingDescription}</p>
       </div>
       <div class="suprr-chat-messages" id="suprrChatMessages"></div>
 
       <!-- Email prompt -->
       <div class="suprr-chat-greeting-email-prompt-container" id="suprrEmailPromptContainer">
         <div class="suprr-chat-greeting-email-prompt">
-          <p>
-            Please enter your email to receive the reply even if you’re offline
-          </p>
+          <p>${currentLanguageText.emailPromptText}</p>
           <div class="suprr-chat-input-container">
             <input
               type="text"
@@ -323,7 +434,7 @@
           <input
             type="text"
             id="suprrMessageInput"
-            placeholder="Type your message..."
+            placeholder="${currentLanguageText.messagePlaceholder}"
           />
           <button id="suprrSendButton">
             <svg
