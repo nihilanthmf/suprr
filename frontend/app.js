@@ -77,11 +77,6 @@
         font-size: 16px;
         font-weight: 500;
       }
-      .suprr-chat-header p {
-        margin: 0;
-        font-size: 12px;
-        color: #00000080;
-      }
       .suprr-close-button {
         background: none;
         border: none;
@@ -109,6 +104,11 @@
         z-index: 50;
         padding-top: 75px;
       }
+      .suprr-chat-header p {
+        margin: 0;
+        font-size: 12px;
+        color: #00000080;
+      }
       .suprr-chat-greeting h1 {
         text-align: center;
         font-size: 32px;
@@ -124,7 +124,16 @@
         color: #00000080;
       }
       .suprr-chat-greeting-email-prompt-container {
-        margin-top: 24px;
+        padding: 15px;
+        display: flex;
+        z-index: 50;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        box-sizing: border-box;
+      }  
+      .suprr-chat-greeting-email-prompt {
+        width: 100%;
         border: 1px solid #0000001a;
         display: flex;
         flex-direction: column;
@@ -133,8 +142,13 @@
         padding: 4px;
         background-color: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(6px);
-        width: 100%;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-sizing: border-box;
+      }
+      .suprr-chat-greeting-email-prompt p {
+        margin: 4px;
+        font-size: 14px;
+        color: #00000080;
       }
       .suprr-chat-input {
         padding: 15px;
@@ -160,19 +174,7 @@
         box-sizing: border-box;
         transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
       }
-      input {
-        flex: 1;
-        padding-left: 8px;
-        padding-right: 8px;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        background-color: transparent;
-      }
-      input:focus {
-        outline: none;
-      }
-      .suprr-chat-greeting-email-prompt-container button,
+      .suprr-chat-greeting-email-prompt button,
       .suprr-chat-input button {
         padding: 6px;
         border: 1px solid #0000001a;
@@ -184,9 +186,24 @@
         justify-content: center;
         color: black;
       }
-      .suprr-chat-greeting-email-prompt-container button:hover,
+      .suprr-chat-greeting-email-prompt button:hover,
       .suprr-chat-input button:hover {
         background-color: #0000001a;
+      }
+      input {
+        flex: 1;
+        padding-left: 8px;
+        padding-right: 8px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        background-color: transparent;
+      }
+      input::placeholder {
+        color: #0000003a;
+      }
+      input:focus {
+        outline: none;
       }
       .suprr-message {
         margin-top: 10px;
@@ -259,14 +276,16 @@
       </div>
       <div class="suprr-chat-greeting" id="suprrChatGreeting">
         <h1>🤗</h1>
-        <h2>Hello! This is Stayn’s Customer support</h2>
+        <h2>Welcome to our Customer Support!</h2>
         <p>
-          Feel free to ask any question about the software or give feedback!
-          We’re most active on 7am - 17pm (EST+5)
+          Feel free to ask any questions about the software or give feedback! We will reply as soon as we can!
         </p>
+      </div>
+      <div class="suprr-chat-messages" id="suprrChatMessages"></div>
 
-        <!-- Email prompt -->
-        <div class="suprr-chat-greeting-email-prompt-container">
+      <!-- Email prompt -->
+      <div class="suprr-chat-greeting-email-prompt-container" id="suprrEmailPromptContainer">
+        <div class="suprr-chat-greeting-email-prompt">
           <p>
             Please enter your email to receive the reply even if you’re offline
           </p>
@@ -298,7 +317,6 @@
           </div>
         </div>
       </div>
-      <div class="suprr-chat-messages" id="suprrChatMessages"></div>
 
       <div class="suprr-chat-input" id="suprrChatInput">
         <div class="suprr-chat-input-container">
@@ -365,6 +383,9 @@
   const emailInput = document.getElementById("suprrEmailInput");
   const chatMessages = document.getElementById("suprrChatMessages");
   const chatGreeting = document.getElementById("suprrChatGreeting");
+  const emailPromptContainer = document.getElementById(
+    "suprrEmailPromptContainer"
+  );
   const chatInput = document.getElementById("suprrChatInput");
   const chatHeader = document.getElementById("suprrChatHeader");
   const lastSeen = document.getElementById("suprrLastSeen");
@@ -387,6 +408,13 @@
     }
   }
 
+  function removeGreetingAddMessageInput() {
+    chatGreeting.style.display = "none";
+    emailPromptContainer.style.display = "none";
+    chatMessages.style.display = "block";
+    chatInput.style.display = "block";
+  }
+
   window.addEventListener("DOMContentLoaded", adjustChatMessagesPadding);
 
   window.addEventListener("resize", adjustChatMessagesPadding);
@@ -407,9 +435,7 @@
 
     if (response.ok) {
       if (data.length !== 0) {
-        chatGreeting.style.display = "none";
-        chatMessages.style.display = "block";
-        chatInput.style.display = "block";
+        removeGreetingAddMessageInput();
       }
 
       for (const message of data) {
@@ -478,8 +504,7 @@
   });
 
   function addMessage(content, isAdmin) {
-    chatGreeting.style.display = "none";
-    chatMessages.style.display = "block";
+    removeGreetingAddMessageInput();
 
     const message = document.createElement("div");
     message.className = isAdmin
@@ -564,9 +589,7 @@
       emailInput.value = "";
       sendMessage(`Email submitted: ${email}`, "email", email);
 
-      chatGreeting.style.display = "none";
-      chatMessages.style.display = "block";
-      chatInput.style.display = "block";
+      removeGreetingAddMessageInput();
     } else {
       emailInput.parentElement.style.backgroundColor =
         errorInputBackgroundColor;

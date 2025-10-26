@@ -8,7 +8,7 @@ CREATE TABLE projects (
     user_id UUID REFERENCES users(id),
     project_name TEXT,
     telegram_chat_id TEXT,
-    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE TABLE chats (
