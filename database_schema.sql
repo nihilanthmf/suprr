@@ -16,7 +16,7 @@ CREATE TABLE chats (
     project_id UUID REFERENCES projects(id),
     message_thread_id TEXT,
     sender_email TEXT,
-    chat_started TIMESTAMP WITH TIME ZONE
+    created_at TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE messages (
