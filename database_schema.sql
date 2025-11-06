@@ -9,7 +9,7 @@ CREATE TABLE projects (
     project_name TEXT,
     private_telegram_chat_id TEXT,
     public_telegram_chat_id TEXT,
-    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE chats (
