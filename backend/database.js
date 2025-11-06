@@ -112,9 +112,10 @@ export async function createChat(
   sender_email,
   messageThreadId
 ) {
+  const created_at = new Date();
   const res = await pool.query(
-    "INSERT INTO chats (id, project_id, sender_email, message_thread_id) VALUES ($1, $2, $3, $4) RETURNING *",
-    [chatId, project, sender_email, messageThreadId]
+    "INSERT INTO chats (id, project_id, sender_email, message_thread_id, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    [chatId, project, sender_email, messageThreadId, created_at]
   );
 
   return res.rows[0];
