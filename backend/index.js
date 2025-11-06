@@ -77,7 +77,7 @@ wss.on("connection", (ws, req) => {
 
       const projectData = await fetchProject(project);
 
-      const telegramGroupId = projectData.private_telegram_chat_id;
+      const telegramGroupId = projectData.telegram_chat_id;
 
       if (!botToken || !telegramGroupId) {
         throw new Error("Telegram configuration is missing");
@@ -111,7 +111,7 @@ wss.on("connection", (ws, req) => {
       );
 
       await writeMessages(chatId, message_content, true);
-      
+
       if (messageBody.type === "email") {
         updateChatEmail(messageBody.chatId, messageBody.sender_email);
       }
@@ -186,17 +186,17 @@ app.post("/webhook", async (req, res) => {
     request.message.text !== undefined
   ) {
     const message_thread_id = request.message.message_thread_id;
-    const private_telegram_chat_id = request.message.chat.id;
+    const telegram_chat_id = request.message.chat.id;
     const text = request.message.text;
     const is_bot = request.message.from.is_bot;
 
     if (
       message_thread_id !== undefined &&
-      private_telegram_chat_id !== undefined &&
+      telegram_chat_id !== undefined &&
       text !== undefined &&
       !is_bot
     ) {
-      const projectId = await fetchProjectIdByTelegramChatId(private_telegram_chat_id);
+      const projectId = await fetchProjectIdByTelegramChatId(telegram_chat_id);
       const chat = await fetchChatByProjectAndMessageThreadId(
         projectId,
         message_thread_id
