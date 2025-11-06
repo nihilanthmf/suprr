@@ -42,11 +42,11 @@ export async function fetchProject(projectId) {
   }
 }
 
-export async function fetchProjectIdByTelegramChatId(telegram_chat_id) {
+export async function fetchProjectIdByTelegramChatId(private_telegram_chat_id) {
   try {
     const res = await pool.query(
-      `SELECT id FROM projects WHERE telegram_chat_id = $1`,
-      [telegram_chat_id]
+      `SELECT id FROM projects WHERE private_telegram_chat_id = $1`,
+      [private_telegram_chat_id]
     );
 
     return res.rows[0].id;
