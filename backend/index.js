@@ -33,6 +33,10 @@ const botBaseUrl = `https://api.telegram.org/bot${botToken}`;
 app.use(cors());
 app.use(express.json());
 
+app.get("/frontend-widget", (req, res) => {
+  res.sendFile("frontend-widget.js", { root: "." });
+});
+
 async function createTopicInTelegram(sender_email, telegramGroupId) {
   const res = await httpRequest(`${botBaseUrl}/createForumTopic`, "POST", {
     chat_id: telegramGroupId,
