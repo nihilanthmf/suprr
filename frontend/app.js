@@ -97,6 +97,11 @@
         overflow-y: auto;
         z-index: 50;
         display: none;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .suprr-chat-messages::-webkit-scrollbar {
+        display: none;
       }
       .suprr-chat-greeting {
         padding: 32px;
@@ -488,7 +493,6 @@
     "suprrEmailPromptContainer"
   );
   const chatInput = document.getElementById("suprrChatInput");
-  const chatHeader = document.getElementById("suprrChatHeader");
   const lastSeen = document.getElementById("suprrLastSeen");
 
   const defaultInputBackgroundColor =
@@ -499,11 +503,11 @@
   const errorInputBorderColor = "#ff000020";
 
   function adjustChatMessagesPadding() {
-    if (chatInput && chatMessages) {
+    if (chatMessages) {
       chatWindow.style.display = "block";
       chatWindow.style.display = "none";
-      chatMessages.style.paddingBottom = "64px";
-      chatMessages.style.paddingTop = chatHeader.offsetHeight + 12 + "px";
+      chatMessages.style.paddingBottom = "66px";
+      chatMessages.style.paddingTop = "60px";
     }
   }
 
