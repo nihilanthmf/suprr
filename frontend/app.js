@@ -356,7 +356,7 @@
         break;
       }
     }
-    return currentLanguageText
+    return currentLanguageText;
   }
   currentLanguageText = setLanguageBasedText();
 
@@ -465,24 +465,14 @@
 
   function getAuthKeyFromScript() {
     const scripts = document.getElementsByTagName("script");
-    for (let script of scripts) {
-      if (script.src && script.src.includes("app.js")) {
-        const url = new URL(script.src, window.location.origin);
-        return url.searchParams.get("projectKey");
-      }
-    }
-    return null;
+    const url = new URL(scripts[0].src);
+    return url.searchParams.get("projectKey");
   }
 
   function getServerUrlFromScript() {
     const scripts = document.getElementsByTagName("script");
-    for (let script of scripts) {
-      if (script.src && script.src.includes("app.js")) {
-        const url = new URL(script.src, window.location.origin);
-        return url.searchParams.get("serverUrl");
-      }
-    }
-    return null;
+    const url = new URL(scripts[0].src);
+    return url.searchParams.get("serverUrl");
   }
 
   const chatButton = document.getElementById("suprrChatButton");
@@ -511,11 +501,9 @@
   function adjustChatMessagesPadding() {
     if (chatInput && chatMessages) {
       chatWindow.style.display = "block";
-      const inputHeight = chatInput.offsetHeight;
-      const chatHeaderHeight = chatHeader.offsetHeight;
       chatWindow.style.display = "none";
-      chatMessages.style.paddingBottom = inputHeight + "px";
-      chatMessages.style.paddingTop = chatHeaderHeight + 12 + "px";
+      chatMessages.style.paddingBottom = "64px";
+      chatMessages.style.paddingTop = chatHeader.offsetHeight + 12 + "px";
     }
   }
 

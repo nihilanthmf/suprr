@@ -4,5 +4,6 @@
 /backend/.DS_Store
 /frontend/.DS_Store
 /frontend/test.html
+/frontend/test-network.html
 todo
 *.sh
