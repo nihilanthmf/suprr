@@ -5,7 +5,7 @@ import {
   fetchChat,
   fetchProject,
   fetchChatByProjectAndMessageThreadId,
-  fetchProjectIdByTelegramChatId,
+  fetchProjectIdAndCompanyNameByTelegramChatId,
   updateLastSeen,
   fetchLastSeen,
   createChat,
@@ -17,6 +17,7 @@ import WebSocket, { WebSocketServer } from "ws";
 import http from "http";
 import url from "url";
 import httpRequest from "./httpRequest.js";
+import { sendEmail } from "./email.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -200,9 +201,11 @@ app.post("/webhook", async (req, res) => {
       text !== undefined &&
       !is_bot
     ) {
-      const projectId = await fetchProjectIdByTelegramChatId(telegram_chat_id);
+      const project = await fetchProjectIdAndCompanyNameByTelegramChatId(
+        telegram_chat_id
+      );
       const chat = await fetchChatByProjectAndMessageThreadId(
-        projectId,
+        project.id,
         message_thread_id
       );
 
@@ -210,7 +213,7 @@ app.post("/webhook", async (req, res) => {
         console.log("chat found!");
         await writeMessages(chat.id, text, false);
 
-        await updateLastSeen(projectId);
+        await updateLastSeen(project.id);
 
         console.log("broadcasting...");
 
@@ -223,6 +226,7 @@ app.post("/webhook", async (req, res) => {
           },
           chatId: chat.id,
         });
+        sendEmail(chat.sender_email, text, project.company_name);
       }
     }
   }
