@@ -70,7 +70,7 @@
         border-radius: 10px 10px 0 0;
         border-bottom: 1px solid #0000001a;
         position: absolute;
-        width: calc(100% - 32px);
+        width: 100%;
       }
       .suprr-chat-header h3 {
         margin: 0;
@@ -94,6 +94,8 @@
       .suprr-chat-messages {
         flex: 1;
         padding: 12px;
+        padding-top: 12px;
+        padding-bottom: 12px;
         overflow-y: auto;
         z-index: 50;
         display: none;
@@ -195,7 +197,7 @@
       .suprr-chat-input button:hover {
         background-color: #0000001a;
       }
-      input {
+      .suprr-input {
         flex: 1;
         padding-left: 8px;
         padding-right: 8px;
@@ -204,10 +206,10 @@
         font-size: 14px;
         background-color: transparent;
       }
-      input::placeholder {
+      .suprr-input::placeholder {
         color: #0000003a;
       }
-      input:focus {
+      .suprr-input:focus {
         outline: none;
       }
       .suprr-message {
@@ -409,6 +411,7 @@
             <input
               type="text"
               id="suprrEmailInput"
+              class="suprr-input"
               placeholder="john@gmail.com"
             />
             <button id="suprrEmailButton">
@@ -439,6 +442,7 @@
           <input
             type="text"
             id="suprrMessageInput"
+            class="suprr-input"
             placeholder="${currentLanguageText.messagePlaceholder}"
           />
           <button id="suprrSendButton">
@@ -468,17 +472,17 @@
   container.innerHTML = chatHTML;
   document.body.appendChild(container);
 
-  function getAuthKeyFromScript() {
-    const scripts = document.getElementsByTagName("script");
-    const url = new URL(scripts[0].src);
-    return url.searchParams.get("projectKey");
+  function getScriptAttributes(attributeName) {
+    let attribute = localStorage.getItem(attributeName);
+    if (!attribute) {
+      attribute = document.currentScript.dataset[attributeName];
+      localStorage.setItem(attributeName, attribute);
+    }
+    return attribute;
   }
 
-  function getServerUrlFromScript() {
-    const scripts = document.getElementsByTagName("script");
-    const url = new URL(scripts[0].src);
-    return url.searchParams.get("serverUrl");
-  }
+  getScriptAttributes("suprrProjectKey");
+  getScriptAttributes("suprrServerUrl");
 
   const chatButton = document.getElementById("suprrChatButton");
   const chatWindow = document.getElementById("suprrChatWindow");
@@ -526,7 +530,9 @@
 
   async function fetchChat(chatId) {
     const response = await fetch(
-      `${httpProtocol}${getServerUrlFromScript()}/fetch-chat-messages/${chatId}`,
+      `${httpProtocol}${getScriptAttributes(
+        "suprrServerUrl"
+      )}/fetch-chat-messages/${chatId}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -553,7 +559,9 @@
 
   async function fetchLastSeen() {
     const response = await fetch(
-      `${httpProtocol}${getServerUrlFromScript()}/fetch-last-seen/${getAuthKeyFromScript()}`,
+      `${httpProtocol}${getScriptAttributes(
+        "suprrServerUrl"
+      )}/fetch-last-seen/${getScriptAttributes("suprrProjectKey")}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -593,8 +601,6 @@
   if (chatId) {
     fetchChat(chatId);
     fetchLastSeen();
-  } else {
-    // ask for user's contact details
   }
 
   chatButton.addEventListener("click", () => {
@@ -626,14 +632,13 @@
       socket.readyState === WebSocket.CLOSING
     ) {
       socket = new WebSocket(
-        `${wsProtocol}${getServerUrlFromScript()}/ws?chatId=${chatId}`
+        `${wsProtocol}${getScriptAttributes(
+          "suprrServerUrl"
+        )}/ws?chatId=${chatId}`
       );
-
-      console.log("Opening ws connection...");
 
       // When the connection is open
       socket.addEventListener("open", () => {
-        console.log("WS connection opened!");
         if (messageWhenOpen) {
           socket.send(messageWhenOpen);
         } else {
@@ -667,7 +672,7 @@
         message_content: message,
         sender_email,
         chatId,
-        project: getAuthKeyFromScript(),
+        project: getScriptAttributes("suprrProjectKey"),
       });
 
       if (!socket) {
