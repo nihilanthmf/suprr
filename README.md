@@ -59,7 +59,11 @@ Once you do that copy the "id" - you will need it during the next steps
 # Self-hosting the frontend
 
 1. The whole frontend is just one file called app.js. It is located in /frontend folder alongside with an example.html file that provides an example usage
-2. Embed the app.js at the top of every page of your website where you want the customer support bubble to show using <script src="app.js?projectKey=your-project-key&serverUrl=your-server-url"></script>. The value for your-server-url must not contain protocol (e.g. domain.com not https://domain.com!)
+2. Embed the app.js at the top of every page of your website where you want the customer support bubble to show using     <script
+    src="app.js"
+    data-suprr-project-key="your-project-key"
+    data-suprr-server-url="your-server-url"
+></script>. The value for data-suprr-server-url must not contain protocol (e.g. domain.com not https://domain.com!)
 
 That's it!
 
