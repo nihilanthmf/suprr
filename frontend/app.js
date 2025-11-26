@@ -122,6 +122,7 @@
   shadow.innerHTML = `
     <style>
       .suprr-container {
+        font-family: Arial, sans-serif;
         line-height: 1;
       }
       .suprr-chat-button {
@@ -150,7 +151,6 @@
         z-index: 50;
       }
       .suprr-chat-window {
-        font-family: Arial, sans-serif;
         position: fixed;
         bottom: 90px;
         right: 20px;
@@ -366,6 +366,17 @@
         background-color: rgba(0, 153, 255, 0.05);
         border-radius: 100%;
         z-index: 0;
+      }
+
+      @media (max-width: 600px) {
+        .suprr-chat-window {
+          position: fixed;
+          bottom: 0px;
+          right: 0px;
+          height: 100%;
+          width: 100%;
+          border-radius: 0px;
+        }
       }
     </style>
 
